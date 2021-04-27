@@ -1,0 +1,65 @@
+---
+title: "HW 1 Mark Holtje"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+Q1. Identify whether the following variables are numerical or categorical.  If numerical, state whether the variable is discrete or continuous.  If categorical, state whether the variable is nominal or ordinal. (5 pts)
+
+*  Number of bird species in New York State over time: numerical, discrete
+* Height of New York City buildings: numerical, continuous
+* Types of tree species found on NYC streets: categorical, nominal
+* Case and control groups in a clinical drug trial:   categorical, nominal
+* Hourly air temperature in Washington Square Park:  numerical, continuous 
+* Stage of tick development (larva, nymph, adult):  categorical, ordinal (since order matters)
+* Number of bacteria on plates: numerical, discrete (you can estimate using counting numbers. No fractions)
+* Blood type (A, AB, B, O): categorical, nominal
+
+```{r}
+
+#Q2. (10 pts)
+#Download Assignment1Data.csv from Classes.  Write the R code to complete the following tasks.  Include comments that explain each line of code (marks will be given for good comments).  Use R notebook/markdown format in RStudio to present both your R code and the resulting output. 
+
+#(i) Read the data into a data frame named "Summer" (first look at the csv file in a text editor to understand the format of a csv file).
+
+#Reads the data from csv file, and saves it into a DataFrame
+Summer<-read.table("Assignment1Data.csv", header=T, sep=',') 
+# displays the dimensions of the dataframe
+dim(Summer) 
+# displays the column names of the dataframe
+colnames(Summer) 
+#displays the first few entries of the dataframe
+head(Summer) 
+#displays the dataframe in string format
+str(Summer) 
+
+
+#(ii) The data frame contains data collected in July and August.  Create two vectors (July and August) and assign the correct data to each of the vectors.
+
+#Creates a Vector called July to store data from the July column of the Summer Df
+July <- c(Summer$July)
+
+#Creates a Vector called August to store data from the July column of the Summer Df
+August <- c(Summer$August) 
+
+#(iii) Create a new vector called "Total" and calculate"Total" as the element-wise sum of the July and August vectors (using vector operations, without using a loop).
+
+#Creates a new vector called Total where I calculate the element-wise sum of the July and August vectors (using vector operations, without using a loop)
+
+Total <- c(July + August)
+
+#(iv) Answer the previous question (iii) again, but this time use a loop (for statement) and no vector operations.
+
+for(i in 1:length(July)){ 
+  print (July[i] + August[i])
+}
+
+#(v) Use the head() function in R to print the first part of Total. 
+
+#Using the head() function in R, I can print the first few entries of Total. 
+head(Total)
+```
+

@@ -1,0 +1,108 @@
+---
+title: "Mark HoltjeHomework 2"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+15 points total. All questions equal marks.
+
+Q1. Some people are hypersensitive to the smell of asparagus, and can even detect a strong odor in the urine of a person who has recently eaten asparagus. This trait turns out to have a simple genetic basis. An individual with one or two copies of the A allele at the gene (AA or Aa genotypes) can smell asparagus in urine, whereas a person with two copies of the alternative "a" allele (aa geneotypes) cannot. Assume that men and women in the population have the same allele frequencies at the asparagus-smelling gene and that marriage and child production are independent of the genotype a the gene. In the human population, 5% of alleles are A and 95% are a.
+
+a) What is the probability that a randomly sampled individual from the population has two copies of the a allele (that is, that it has an aa genotype)?
+b) What is the probability that both members of a randomly sampled married couple (man and woman) are aa at the asparagus-smelling gene?
+c) What is the probability that both members of a randomly sampled married couple (man and woman) are heterozygotes at this locus (meaning that each person has one allele A and one allele a)?
+d) Consider the type of couple described in (c). What is the probability that the first child of such a couple also has one A allele and one a allele (is a heterozygote)? Remember that the child must receive exactly one allele from each parent.
+
+```{r}
+#For question 1a, I think we would just need to determine the probability that someone inherits an a from each parent is:
+
+aa_prob <- 0.95 * 0.95  #in the case of aa parents
+aa_prob
+
+#For question 1b, I think we would just need to determine the probability that someone with aa alleles meets with someone else who has aa alleles, which is:
+
+couple_aa_prob <- aa_prob * aa_prob #the marriage is independent of the genotype
+couple_aa_prob
+
+#For question 1c, I think we would just need to determine the probability that someone with Aa alleles meets with someone else who has Aa alleles, which is:
+
+Aa_prob <- 0.95 * 0.05 #The probability of someone having Aa alleles
+Aa_prob 
+
+couple_Aa_prob <- Aa_prob * Aa_prob #the marriage is independent of the genotype
+couple_Aa_prob
+
+#For question 1d, we have to determine the probability that the first child of such a couple also has one A allele and one a allele (is a heterozygote) where that child must receive exactly one allele from each parent.
+
+Aa_prob_child <- 1- (0.25) - (0.25) #the child production is independent of the genotype, so there is a 50% chance that they will receive Aa or aA (Aa if written in a Punnet square test). In other words, there is a 50% chance that the offspring will not have aa or AA. It follows Mendelian genetics. 
+Aa_prob_child
+```
+
+Q2. A prenatal test for Down syndrome (DS) has a sensitivity i.e. Pr(diagnosed as DS| has disease) = 0.75, and a false positive rate of 0.045. If the probability of DS in the community is 0.0007, what is the probability of DS in a given pregnancy, given a positive test result? (Show your working in R).
+
+```{r}
+#For question 2, we will use the Bayes Theorem within R to determine the probability of DS in a given pregnancy, given a positive test result. So, before we talk about, the solution keep in mind that the false positive rate is 0.045 (diagnosed as positive, but do not actually have the disease). The true positive rate (diagnosed to have the disease, and do actually have the disease) is 0.75. The probability of having down syndrome is 0.0007 within the community. So, the question asks what the probability of DS in a given pregnancy, given a positive test result?
+
+ds_probability <- 0.0007
+fp_rate <- 0.045
+sensitivity <- 0.75
+
+TP_probability <-(ds_probability * sensitivity) / ((ds_probability * sensitivity) + ((1-ds_probability)*fp_rate))
+TP_probability
+
+#This considers that given a positive test (people who have DS and are properly diagnosed as well as the people who do not have DS but are incorrectly diagnosed to have it), there is a possibility of actually having it, which is 0.01154011, or 1.15%. This might be mainly caused by the high false positive rate of 4.25%.
+```
+
+Q3.
+The growth rate of multiple mutant yeast lines was measured (relative to the growth rate of wild type yeast):
+0.88, 1.05, 1.05, 1.00, 1.30, 1.35, 1.01, 1.21
+
+a) What is the mean growth rate of these yeast lines? 
+b) What is the median growth rate?
+c) What is the variance?
+d) What is the standard deviation?
+
+Show your working in R, both from first principles using the definitions, and using the corresponding built-in functions in R.
+
+```{r}
+#Before we determine the population statistics, we need to create a vector that contains the listed observations.
+
+growth_rates <- c(0.88, 1.05, 1.05, 1.00, 1.30, 1.35, 1.01, 1.21)
+
+#For question 3a, to determine the mean growth rate of the yeast lines, we would use the built-in R function "mean"
+mean(growth_rates)
+
+#For question 3b, to determine the median growth rate of the yeast lines, we would use the built-in R function "median"
+
+median(growth_rates)
+
+#For question 3c,to determine the variance, we would use the built-in R function "var"
+
+var(growth_rates)
+
+#For question 3d, to determine the standard deviation, we would use the built-in R function "sd". We could also use the square root of the variance. Whichever works. 
+
+sd(growth_rates)
+sqrt(var(growth_rates)) 
+```
+
+For the following question show your solution with R code. Make sure your R code is well commented. 
+
+Q4. R distribution functions:
+
+Assume the systolic blood pressure in a population of healthy individuals is described by a normal distribution with a mean of 122.6 mmHg and a standard deviation of 13.2 (sigma). If we want to design a test for high blood pressure so there is only a 5% chance of having a false positive when tested against a patient without hypertension, what cutoff should we use?
+
+```{r}
+#For question 4, we would need to determine the cutoff value. In order to do that we need to acknowledge: 
+#mean_blood_pressure = 122.6, standard_deviation_blood_pressure = 13.2, percent_false_positive = 0.05, so there is a range by which the blood pressure of a patient without hypertension would be read as them having hypertension. This means that there is a Type 1 error, meaning there is a 5% chance of misdiagnosis of hypertension. 
+
+cutoff <- qnorm(0.95,mean=122.6,sd=13.2) #Find cutoff value using 95%, since we are determining the value at a 95% confidence interval, meaning that our sensitivity (TP/(TP+FN)) is 95%. There are values above the cutoff that count as False positive values. 
+cutoff
+
+CI_percent = pnorm(144.3121, mean=122.6, sd=13.2) #Checking my answer to make sure I get 95%. 
+CI_percent
+#It seems that the cutoff value to use for a a test for high blood pressure so there is only a 5% chance of having a false positive when tested against a patient without hypertension would be 144.3121 mmHg. The graph for the hypertension levels overlaps with our test, and the small overlap counts as FP. 
+
+```
