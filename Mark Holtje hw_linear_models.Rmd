@@ -1,0 +1,353 @@
+---
+title: "Mark Holtje hw linear models."
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+header-includes: \usepackage{comment} \usepackage{array,amsmath} \newcommand\eqbydef{\buildrel{\rm
+  def}\over=}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 1
+
+The study results from taking blood glucose levels in mmol/l from independent groups of normal and diseased mice is given in the file ``mice_glucose.csv''. 
+
+Fit a linear model to this dataset using lm().
+Perform and interpret diagnostic plots for the model fit and comment on them (i.e. check the assumptions).
+
+Estimate the effect size of interest here (use the linear model fit from above).
+
+Compute and interpret a p-value to indicate the strength of evidence against the null hypothesis of no difference in mean of the distributions of these two samples-  compute the p-value from first principles using a F statistic and also calculate with the anova() function.  Compare your with your p-value computed previously using a t distribution and what is the relationship between the t statistic and the f statistics?
+
+```{r}
+Blood_glucose <- read.csv("mice_glucose.csv", header=T) #CSV data set of independent groups of normal+diseased mice
+colnames(Blood_glucose) #column names listed
+Glucose_level <- Blood_glucose$glucose #Glucose level values in mmol/l
+head(Glucose_level)   #First five Glucose level values
+normal_or_diseased <- Blood_glucose$status #Health Status of the mice
+tail(normal_or_diseased) #last five Glucose level values
+head(normal_or_diseased) #First five Glucose level values
+
+#Fit a Simple Linear model Fit for Mice Blood Glucose:
+blood_glucose_linear_model <- lm(Glucose_level ~ normal_or_diseased, data=Blood_glucose) #Simple Linear model Fit
+blood_glucose_linear_model 
+coefficients(blood_glucose_linear_model) # coefficients give the slopes (parameter estimates) 
+
+#The line of best fit is  y = 6.938536 + (-2.507339)x
+
+#Determining the effect size of interest by calculating the group means: 
+
+normal_mean <- mean(Blood_glucose [1:80,1])
+diseased_mean <- mean(Blood_glucose [81:150,1])
+
+Blood_glucose_difference <- normal_mean - diseased_mean #Take the difference of the means of both groups: 0.5042262
+Blood_glucose_difference #The effect size of interest is 2.507339
+
+t.test(formula= glucose~status, data= Blood_glucose) #Calculates the Welch Two Sample T-test
+
+#Based on the Welch Two Sample T-test, the values are: t = 4.7627, df = 143.22, p-value = 4.631e-06. The alternative hypothesis is that the true difference in means is not equal to 0. The 95 percent confidence interval is 1.466719 to 3.54795. The sample estimates of mean in group diseased is  6.938536, and the mean in group normal is 4.431197. 
+
+t_glucose = 4.7627
+f_glucose = (t_glucose)^2
+f_glucose #The f-statistic is t^2: 22.68331
+
+anova(blood_glucose_linear_model) # anova() is a function that computes a p-value using an F-statistic
+summary.lm(blood_glucose_linear_model)#summary() is used to determine the p-value using a T-statistic.
+
+#Regarding the ANOVA (Analysis of Variance) table, the response variable is the Glucose_level. For normal_or_diseased, the degrees of freedom is 1, the sum of squares is 234.71, the mean square is 234.71,the f value is in fact: 22.831, and the pr(>F) or p-value is 4.221e-06. In the case of residuals, the degrees of freedom is 148, the sum of squares is 1521.44, and the mean square is 10.28, and the Residual standard error is 3.206. In addition to what I wrote, the Min is -7.2830, the 1Q is -1.8585, the Median is -0.1765, the 3Q is 2.0699, and the Max is 7.5436. With summary(), the t-value for normal_or_diseased is determined to be -4.778 and the p-value (pr(>|t|)) is 4.22e-06. To be clear, the measurements are in mmol/l.Due to a high f-statistic value, there is a high variability of group means relative to the group variability.
+
+#The relationship between the t-statistic and the f-statistic is that the F-test is statistical test that determines the equality of the variances of the two normal populations, while the T-statistic follows Student t-distribution, under null hypothesis. F-statistic follows Snedecor f-distribution, under null hypothesis. In both instances, you are comparing the means of two populations. The f-statistic is essentially t^2 value.
+
+#Lastly, in terms of the p-value in indicating the strength of evidence against the null hypothesis of no difference in mean of the distributions of these two samples. Since the p-value given the f-statistic is 4.221e-06, and the p-value (pr(>|t|)) is 4.22e-06 or 0.00000422, then you must reject the null hypothesis, meaning that there is very strong evidence showing that there is a difference in mean of the distributions of these two samples. 
+
+#Diagnostic Plots: 
+
+plot(fitted(blood_glucose_linear_model), resid(blood_glucose_linear_model)) # check assumption of homogeneity of variance with a residual plot. The data for both the normal mice and the diseased mice seems to be dispersed (spread out). The model for each individual group works better than a model for both of the two samples. 
+
+
+# qq-plot to check assumption of Gaussian residuals
+e <- resid(blood_glucose_linear_model)
+
+# Rank values
+i <- rank(e)
+i
+
+# Get "expected" proportions
+proportion <- i/(length(e)+1)
+proportion
+
+# Use qnorm to get corresponding "expected" Z values from normal distribution
+qnorm(proportion)
+
+# Plot "expected" or "theoretical" values against observed ratios
+
+qqnorm(resid(blood_glucose_linear_model))
+#Given what is shown in the Normal qqnorm plot, a majority of the data resides between the -1 and 1 theoretical and sample quantiles,but the data spans the -3 to 3 quantiles. For reference, the qqplot is a scatterplot created by plotting two sets of quantiles against one another so that if both sets of quantiles come from the same distribution, we should see the points forming a line that's roughly straight. In this case, the lines is nearly exactly straight. 
+
+# Using built-in R residual plot and qq-plot (and some other diagnostic plots)
+par(mfrow=c(2,2))
+plot(blood_glucose_linear_model, which=1:4)
+
+#Given the residuals vs fitted values plot, we can see that around the 4.5 and 7.0 fitted values, that the residuals span about -5 to 5. With regards to the scale-location graph, we see about the same result. Lastly, the Cooks Distance chart (used for measuring the effect of deleting a given observation), shows that the points with a large Cook's distance that are considered to merit closer examination in the analysis ar the observed 98, 141, and 142. 
+
+```
+
+## Problem 2
+
+You perform an experiment measuring the response on cellular calcium concentration in cell cultures where a certain drug was added at various increasing concentrations (units in mmol/l). The data are in the file "calcium_regression2.csv". 
+
+What experimental design is this?
+
+Plot the data. What kind of plot is this? Show confidence intervals.
+
+Perform an appropriate linear regression. What is the best fitting line equation? Show this on the plot, including 95% confidence bands. Check the linear model assumptions using diagnostic plots. 
+
+Predict what the calcium level would be for a drug level of 0.55 mmol/l.
+
+Specify the null model.
+
+Analyse the fit of the model, and F-statistic and p-value and report your conclusions (compute all these from first principles using the definitions and show your working). 
+
+
+```{r}
+cellular_calcium_concentration <- read.csv("calcium_regression2.csv", header=T) #CSV data set of cellular calcium concentration of cell cultures where a certain drug was added at various increasing concentrations (mmol/l)
+colnames(cellular_calcium_concentration) #column names listed
+drug_concentration <- cellular_calcium_concentration$drug #Drug concentration used
+calcium_level <- cellular_calcium_concentration$calcium #Calcium levels in mmol/l
+
+plot(drug_concentration,calcium_level) #Scatter plot for drug_concentration and calcium_level variables.
+
+#The experimental design for this is a simple repeated measures design (within subject) that generalizes a paired t-test to more than two time points, and since it involves multiple measures of the same variable taken on the same or matched subjects either under different conditions or over two or more time periods one-way ANOVA (extension of independent sample t test to 3 or more classes)
+
+# Compute the Pearson correlation coefficient
+sum((drug_concentration-mean(drug_concentration))*(calcium_level-mean(calcium_level)))/(sqrt(sum((drug_concentration-mean(drug_concentration))^2))*sqrt(sum((calcium_level-mean(calcium_level))^2)))
+
+# Use built-in R function for computing Pearson correlation coef.
+cor(drug_concentration,calcium_level) #Pearson correlation coef is -0.8830823. 
+
+# test (compute p-value) for a correlation against a null hypothesis of 0 correlation using the built in test function
+cor.test(drug_concentration,calcium_level)
+
+# Compute the Spearman rank correlation coefficient
+cor(drug_concentration,calcium_level,method="spearman")#Spearman rank correlation coefficient of -0.855.
+
+# Fit a linear model (i.e. fit a line for a simple linear model)
+cellular_calcium_concentration_linear_model <- lm(calcium_level ~ drug_concentration, data = cellular_calcium_concentration) # OLS
+
+#The best fitting line equation is  y = 1.4909 + -0.8879x
+#Predict calcium level given a drug level of 0.55 mmol/l: 1.4909 + 0.55(-0.8879) = 1.00255 mmol/l
+
+pc <- predict(cellular_calcium_concentration_linear_model, int="c") #CIs for 95%
+pc
+pp <- predict(cellular_calcium_concentration_linear_model, int="p") #PIs for 95%
+pp
+
+plot(drug_concentration,calcium_level)#make a scatter plot  
+abline(cellular_calcium_concentration_linear_model) #plot the linear regression line on the scatter plot
+matlines(drug_concentration, pc,col="black") #plotting confidence bands on the scatter plot 
+matlines(drug_concentration, pp,col="black") #plotting prediction bands for future responses
+
+coefficients(lm(calcium_level ~ drug_concentration)) # coefficients give the slopes(parameter estimates)
+
+anova(lm(calcium_level ~ drug_concentration))#computes a p-value using the F-statistic
+
+# optionally, can use summary.lm()
+summary.lm(lm(calcium_level ~ drug_concentration))#computes a p-value using a T-statistic
+
+#Null model: concentration of drug has no effect on the cellular_calcium_concentration. 
+
+#Given the fit of the model is y = 1.4909 + -0.8879x and the Residual standard error is 0.1649 on 9 degrees of freedom, the multiple R-squared is 0.7798 and the Adjusted R-squared is 0.7554, the trend seems to be a moderately strong negative linear correlation. The F-statistic is 31.878 and p-value is 0.0003152 given anova(). The T-statistic for drug_concentration is -5.646 and p-value is 0.000315 given summary(). The Pearson correlation coef is -0.8830823 and Spearman rank correlation coefficient of -0.855 which mean that the correlation is moderately negative. Due to a high f-statistic value, there is a high variability of group means relative to the group variability.
+
+#The 95% confidence intervals are shown for all entries. For example, for 1: 1.280397 to 1.701335 mmol/l
+
+#I conclude that since the p-values indicate the strength of evidence against the null hypothesis of no effect on the cellular_calcium_concentration that since the p-values given the f-statistic and the p-value (pr(>|t|)) are both less than 0.05, then you must reject the null hypothesis, meaning that there is very strong evidence showing that there is effect on the cellular_calcium_concentration (in this case, a moderate negative trend). 
+
+
+#Diagnostic Plots: 
+
+plot(fitted(cellular_calcium_concentration_linear_model), resid(cellular_calcium_concentration_linear_model)) #check assumption of homogeneity of variance with a residual plot
+
+#According to the residual plot, there is no homogeneity of variance. 
+
+# qq-plot to check assumption of Gaussian residuals
+e_2 <- resid(cellular_calcium_concentration_linear_model)
+
+# Rank values
+i_2 <- rank(e_2)
+i_2
+
+# Get "expected" proportions
+proportion_2 <- i_2/(length(e_2)+1)
+proportion_2
+
+# Use qnorm to get corresponding "expected" Z values from normal distribution
+qnorm(proportion_2)
+
+# Plot "expected" or "theoretical" values against observed ratios
+
+qqnorm(resid(cellular_calcium_concentration_linear_model))
+#Given what is shown in the Normal qqnorm plot, a majority of the data resides between the -2 and 2 theoretical and sample quantiles. For reference, the qqplot is a scatterplot created by plotting two sets of quantiles against one another so that if both sets of quantiles come from the same distribution, we should see the points forming a line that's roughly straight. In this case, the lines is nearly exactly straight, but there is no concentration of the data, showing that it is more spread out. 
+
+# Using built-in R residual plot and qq-plot (and some other diagnostic plots)
+par(mfrow=c(2,2))
+plot(cellular_calcium_concentration_linear_model, which=1:4)
+
+#Given the residuals vs fitted values plot, we can see that around the 0.75, 1.02, and 1.21 fitted values, that the residuals span about 0.3 to -0.2. With regards to the scale-location graph, we see that the trend line shows a steep decline as the fitted values increase, and the residuals seem to vary in distance from the fitted values. Lastly, the Cooks Distance chart (used for measuring the effect of deleting a given observation), shows that the points with a large Cook's distance that are considered to merit closer examination in the analysis are the observed 1, 9, and 11. 
+```
+
+## Problem 3
+
+You perform a similar experiment to problem 2, but this time you measure using qPCR the expression of a certain gene of interest where a certain drug was added at various increasing concentrations (drug units in mmol/l). The data are in the file "gene_regression.csv". 
+
+Perform an appropriate linear regression including checking the linear model assumptions using diagnostic plots. 
+
+What is the best fitting line equation? 
+
+Analyse the fit of the model, and F-statistic and p-value and report your conclusions. (You may use any R functions in your solution).
+
+```{r}
+qPCR <- read.csv("gene_regression.csv", header=T) #CSV data set of expression of a certain gene of interest where a certain drug was added at various increasing concentrations (drug units in mmol/l).
+colnames(qPCR) #column names listed
+drug_concentration_2 <- qPCR$drug #Drug concentration used
+head(drug_concentration_2)
+gene_exp  <- qPCR$gene_exp #qPCR levels in mmol/l
+head(gene_exp)
+
+
+qPCR_linear_model <- lm(gene_exp ~ drug_concentration_2, data = qPCR) #Linear model fit for qPCR.
+
+plot(drug_concentration_2,gene_exp) #Plotting both variables to determine effect of drug concentration on gene expression. 
+
+abline(qPCR_linear_model)#plot the regression line on the scatter plot
+
+#Given the scatter plot, it seems like there's not only an outlier value, but that the trend line added to it barely connects many of the data points. Visually, it does not look linear. 
+
+
+coefficients(lm(gene_exp ~ drug_concentration_2)) # coefficients give the slopes(parameter estimates). The best fitting line equation is y = 2377.275x + (-5565.443)
+
+anova(lm(gene_exp ~ drug_concentration_2))#computes a p-value using the F-statistic
+
+#We find that the F-statistic is 4.4913 and the p-value is 0.03916 on 49 degrees of freedom. Due to a low f-statistic value, there is a low variability of group means relative to the group variability.
+
+summary.lm(lm(gene_exp ~ drug_concentration_2))#computes a p-value using a T-statistic
+
+#We find that the T-statistic is 2.119 for drug_concentration_2 and the p-value is 0.0392 
+
+#In terms of The fit of the model since the p-value is slightly high (0.0392) and the Multiple R-squared is 0.08396 and the Adjusted R-squared is 0.06527, that would imply a weak positive linear fit, implying that there is no discernible effect of higher drug concentration in mmol/l on the gene expression. 
+
+#Diagnostic Plots: 
+
+plot(fitted(qPCR_linear_model), resid(qPCR_linear_model)) # check assumption of homogeneity of variance with a residual plot
+
+#According to the residual plot, there is homogeneity of variance due to data points being close together. Also, there is an outlier present with a 150,000 residual value. 
+
+# qq-plot to check assumption of Gaussian residuals
+e_3 <- resid(qPCR_linear_model)
+
+# Rank values
+i_3 <- rank(e_3)
+i_3
+
+# Get "expected" proportions
+proportion_3 <- i_3/(length(e_3)+1)
+proportion_3
+
+# Use qnorm to get corresponding "expected" Z values from normal distribution
+qnorm(proportion_3)
+
+# Plot "expected" or "theoretical" values against observed ratios
+
+qqnorm(resid(qPCR_linear_model))
+#Given what is shown in the Normal qqnorm plot, a majority of the data resides between the -1 and 1 theoretical and sample quantiles. In this case, the lines is nearly exactly straight, but there is no concentration of the data, showing that it is more spread out, despite the outlier.
+
+# Using built-in R residual plot and qq-plot (and some other diagnostic plots)
+par(mfrow=c(2,2))
+plot(qPCR_linear_model, which=1:4)
+
+#Given the residuals vs fitted values plot, we can see that around the 12500 and 17500 fitted values that the residuals span about 1000 to -1000. With regards to the scale-location graph, we see that the trend line shows a steep incline as the fitted values increase, and the residuals seem to not vary in distance from the fitted values. Lastly, the Cooks Distance chart (used for measuring the effect of deleting a given observation), shows that the points with a large Cook's distance that are considered to merit closer examination in the analysis is the observed 51. 
+```
+
+## Problem 4
+An experiment performed on flies examined the effect of two food sources on the lengths of their eye stalks. The data is in the file "fly_eye_stalk.csv".
+
+One group was fed corn, and an independent group was fed cotton. 
+
+Estimate the size of the effect of interest here.
+
+Perform and report on the results of an appropriate statistical test for comparing the mean eye stalk length in the two groups. Include diagnostic plots to check your assumptions and justify your choice of test. (You may use any R function in your solution.)
+
+```{r}
+fly_eye_stalk <- read.csv("fly_eye_stalk.csv", header=T) #CSV data set testing the effect of two food sources on the lengths of their eye stalks. 
+colnames(fly_eye_stalk) #column names listed
+stressor <- fly_eye_stalk$stressor #Food source stressor
+head(stressor)
+tail(stressor)
+
+response  <- fly_eye_stalk$response #lengths of eye stock of flies
+head(response)
+
+
+fly_eye_stalk_linear_model <-lm(response~stressor, data = fly_eye_stalk)#fly_eye_stalk Linear model fit
+fly_eye_stalk_linear_model
+
+coefficients(fly_eye_stalk_linear_model) # coefficients give the slopes(parameter estimates). The best fitting line equation is y = 2.0471 + (-0.5042)x. 
+
+anova(lm(fly_eye_stalk_linear_model))#computes a p-value using the F-statistic.
+
+
+summary.lm(fly_eye_stalk_linear_model)
+
+#We find that the T-statistic is -7.866 for drug_concentration_2 and the p-value is 7.35e-10. We also find that the multiple R-squared value is 0.59 and the Adjusted R-squared value is 0.5804, indicating a moderate positive linear effect of the food source type on the lengths of the fly eye stalks. 
+
+#Determining the effect size of interest by calculating the group means: 
+
+corn_mean <- mean(fly_eye_stalk [1:21,2])
+cotton_mean <- mean(fly_eye_stalk [22:45,2])
+
+eye_stalk_difference <- corn_mean - cotton_mean #Effect size of interest: 0.5042262
+eye_stalk_difference
+
+t.test(formula= response~stressor, data= fly_eye_stalk)
+
+#Based on the Welch Two Sample T-test, the values are: t = 8.3477, df = 26.568, p-value = 6.666e-09. The 95 percent confidence interval is  0.3801943 to 0.6282581. The sample estimates: mean in group Corn mean is 2.04 and in group Cotton is 1.542917.
+
+t_stressor = 8.3477
+f_stressor = (t_stressor)^2
+f_stressor #The f-statistic is t^2: 69.6841, which differs from the yielded f-statistic from the anova function.
+
+#Diagnostic Plots: 
+
+plot(fitted(fly_eye_stalk_linear_model), resid(fly_eye_stalk_linear_model)) # check assumption of homogeneity of variance with a residual plot
+
+#According to the residual plot, there is no homogeneity of variance due to data points due to the data of the stressor cotton being far away from each other, and the variance of the corn stressor data being more closely packed. The model for each individual group is suited better than the the model for both of the two samples to represent the experimental data. 
+
+# qq-plot to check assumption of Gaussian residuals
+e_4 <- resid(fly_eye_stalk_linear_model)
+
+# Rank values
+i_4 <- rank(e_4)
+i_4
+
+# Get "expected" proportions
+proportion_4 <- i_4/(length(e_4)+1)
+proportion_4
+
+# Use qnorm to get corresponding "expected" Z values from normal distribution
+qnorm(proportion_4)
+
+# Plot "expected" or "theoretical" values against observed ratios
+
+qqnorm(resid(fly_eye_stalk_linear_model))
+#Given what is shown in the Normal qqnorm plot, a majority of the data resides between the -1.5 and 1 theoretical and sample quantiles. In this case, the lines is nearly exactly straight, but there is no concentration of the data, showing that it is more spread out. Around the 1.2 theoretical quantile however, you start to see that the sample quantile value starts to increases, giving the data spread pattern a hook-shape, kind of like a sigmoid function for logistic regression. 
+
+# Using built-in R residual plot and qq-plot (and some other diagnostic plots)
+par(mfrow=c(2,2))
+plot(fly_eye_stalk_linear_model, which=1:4)
+
+#Given the residuals vs fitted values plot, we can see that around the 1.5 and 2.1 fitted values that the residuals span about 0.5 to -0.5 for 1.5, but for 2.1 the residuals range from 0.2 to -0.2 and seem to concentrate around there. With regards to the scale-location graph, we see that the trend line shows a steep decline as the fitted values increase, and the residuals seem to vary in distance from the fitted values only at 1.5, but not at the 2.1 values. Lastly, the Cooks Distance chart (used for measuring the effect of deleting a given observation), shows that the points with a large Cook's distance that are considered to merit closer examination in the analysis are the observed 22,23, and 45. 
+
+```
